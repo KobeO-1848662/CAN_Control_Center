@@ -1,6 +1,8 @@
 import os
 import tkinter as tk
 from tkinter import messagebox
+from log_simulation import simulateLogFile, simulateLogFileCANTRAIN
+
 
 def onButtonClick():
     selectedOption = dropdownVar.get()
@@ -43,16 +45,30 @@ def openLogWindow(selectedOption):
     fileDropdown = tk.OptionMenu(newWindow, fileVar, *logFiles)
     fileDropdown.pack(pady=10)
 
-    showFileButton = tk.Button(newWindow, text="kies log file", command=lambda: showSelectedFile(fileVar.get()))
+    showFileButton = tk.Button(newWindow, text="kies log file", command=lambda: showSelectedFile(path, fileVar.get()))
     showFileButton.pack(pady=5)
 
-def showSelectedFile(selectedFile):
-    messagebox.showinfo("gekozen logfile", f"gekozen logfile: {selectedFile}")
+def showSelectedFile(path, selectedFile):
+    newWindow = tk.Toplevel(root)
+    newWindow.title(selectedFile)
+
+    canvas = tk.Canvas(newWindow, width= 100, height= 100)
+    canvas.create_text(50, 50, text="gekozen file: \n" + selectedFile, fill="black")
+    canvas.pack()
+
+    runFileButton = tk.Button(newWindow, text="start simulatie", command=lambda: runSelectedFile(path, selectedFile))
+    runFileButton.pack(pady=5)
+
+def runSelectedFile(selectedPath, selectedFile):    
+    path = selectedPath
+    file = os.path.join(path, selectedFile)
+    simulateLogFile(file)
+
 
 root = tk.Tk()
 root.title("CAN control center")
 
-datasets = ["ROAD", "GIDS", "CAN TRAIN AND TEST"]
+datasets = ["test", "ROAD", "GIDS", "CAN TRAIN AND TEST"]
 
 dropdownVar = tk.StringVar(root)
 dropdownVar.set(datasets[0])
@@ -65,6 +81,7 @@ currentDirectory = os.path.dirname(__file__)
 canTrainPath = os.path.join(currentDirectory, "datasets/canTrain")
 
 paths = {
+    "test": os.path.join(currentDirectory, "datasets/test"),
     "ROAD": os.path.join(currentDirectory, "datasets/road/ambient"),
     "GIDS": os.path.join(currentDirectory, "datasets/gids"),
     "CAN TRAIN AND TEST": os.path.join(currentDirectory, "datasets/canTrain"),
