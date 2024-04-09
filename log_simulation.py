@@ -1,4 +1,7 @@
+import serial
 import time
+
+ECU0 = serial.Serial(port='/dev/ttyACM0', baudrate=9600, timeout=0.01)      
 
 ecuMessageMappingROAD = {
     0: [1031, 117, 1512, 458, 569, 61, 722, 1788, 651, 737, 930, 1262, 631, 1661, 1694, 1505],
@@ -11,94 +14,42 @@ ecuMessageMappingROAD = {
     7: [485, 813, 420, 470, 37, 1649, 695, 244, 300, 1413, 1533]
 }
 
-ecuMessageMappingCANTRAIN1 = {
-    0: [1001, 1017, 1019, 1217, 1233, 1906, 417, 451, 707, 961, 977, 1265, 401],
-    1: [1225, 1919, 413, 501, 249, 1322, 312, 193, 455, 969, 1249, 1005, 499],
-    2: [1280, 1907, 381, 383, 388, 489, 761, 840, 461, 842, 485, 241, 1009],
-    3: [298, 308, 1300, 409, 288, 820, 1905, 197, 201, 481, 1257, 497]
-}
 
-ecuMessageMappingCANTRAIN2 = {
-    0: [1001, 1017, 1019, 1217, 1233, 1265, 1906, 201, 707, 977, 417, 451, 961, 413, 431, 401, 501],
-    1: [1021, 1910, 459, 721, 969, 485, 1005, 1009],
-    2: [1241, 1904, 1300, 409, 481, 491, 495, 1905],
-    3: [1280, 1907, 193, 381, 383, 455, 461, 489, 761, 840, 842, 197, 388, 820, 298],
-    4: [199, 249, 1919, 1225, 393, 1257, 497],
-    5: [241, 288, 312, 1322, 1249, 493, 499],
-}
+def sendMessageToECU(message, id):
+    currentTimestamp = time.time()                  #timestamp op moment van writen naar ECU
+    message = f"({currentTimestamp}) + {message}"           
 
-ecuMessageMappingCANTRAIN3 = {
-    0: [1001, 1265, 1267, 190, 417, 419, 426, 442, 451, 452, 453, 479, 500, 961, 977, 979, 985, 170, 1914, 398, 647, 707, 1912, 328],
-    1: [1017, 1019, 1020, 1217, 1223, 1233, 1417, 1906, 485],
-    2: [1225, 1919, 562, 1221, 209, 1257, 288, 1328, 493],
-    3: [1280, 842, 1105, 199, 211, 241, 1322, 320, 1005],
-    4: [1907, 1920, 208, 381, 386, 389, 454, 455, 462, 489, 508, 510, 532, 563, 564, 761, 840, 844, 866, 193],
-    5: [1928, 304, 309, 311, 313, 289, 298, 352, 497],
-    6: [413, 422, 431, 393, 501, 249, 810, 969, 1009],
-    7: [460, 463, 197, 201, 1249, 1300, 1323, 481, 499]
-}
+    #if id == 0:
+    ECU0.write(bytes(message, 'utf-8'))         #write timestamp + ecuID naar arduino (=juiste ECU)
+                                                    #zelfde doen voor overige ECUs
+    
+    # dit wordt later verwijderd 
+    # (ECUs moeten niet terugschrijven maar moeten op CAN bus schrijven)
+    data = ECU0.readline()                          
+    return data
 
-def sendMessageToECU(ecuID, messageID, timestamp):
-    print(f"Sending message {messageID} to ECU {ecuID}: ({timestamp})")
-
-def simulateLogFile(logfile):
+def findECUs(logfile):
     with open(logfile, 'r') as file:
         for line in file:
-            if '#' in line:
-                message = line.split('#')[0]
-                messageID = message.split(' ')[2]
+            if '#' in line:   
+                message = line.split()
+                data = message[2]
+                messageID = data.split('#')[0]
                 decimalID = int(messageID, 16)
+                withoutTimestamp = message[1] + " " + message[2]
 
-                currentTimestamp = time.time()
-                
                 for ecuID, messages in ecuMessageMappingROAD.items():
                     if decimalID in messages:
-                        sendMessageToECU(ecuID, decimalID, currentTimestamp)
+                        yield withoutTimestamp, ecuID
                         break
-                    #else: 
-                    #    print(f"no mapping found for id {decimalID}")
 
-    print(f"\neinde simulatie")
-
-    time.sleep(0.01)
-
-def simulateLogFileCANTRAIN(logfile):
-    with open(logfile, 'r') as file:
-        for line in file:
-            if '#' in line:
-                message = line.split('#')[0]
-                messageID = message.split(' ')[2]
-                decimalID = int(messageID, 16)
-
-                currentTimestamp = time.time()
-                
-                for ecuID, messages in ecuMessageMappingCANTRAIN1.items():
-                    if decimalID in messages:
-                        sendMessageToECU(ecuID, decimalID, currentTimestamp)
-                        break
-                    #else: 
-                    #    print(f"no mapping found for id {decimalID}")
+def runSimulation(logfile):
+    list = findECUs(logfile)
+    time.sleep(1)
+    for i in list:
+        message = i[0]
+        ecu = i[1]
+        value = sendMessageToECU(message, ecu)
+        print(value)
     
-    print(f"\neinde simulatie")
-            
-    time.sleep(0.01)
-
-
-    
-
-
-
-def getUniqueIds(file):
-    messageIds = set()
-    
-    with open(file, 'r') as file:
-        for line in file:
-            if '#' in line:
-                message = line.split('#')[0]
-                messageId = message.split(' ')[2]
-                decimalId = int(messageId, 16)
-                messageIds.add(decimalId)
-    
-    print(messageIds)
-    return messageIds
-
+    print("simulatie voltooid")

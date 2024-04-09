@@ -1,7 +1,7 @@
 import os
 import tkinter as tk
 from tkinter import messagebox
-from log_simulation import simulateLogFile, simulateLogFileCANTRAIN
+from log_simulation import runSimulation
 
 #directory to log files
 currentDirectory = os.path.dirname(__file__)
@@ -75,7 +75,7 @@ def openLogWindow(selectedOption):
 
 def showSelectedFile(path, selectedFile):
     newWindow = tk.Toplevel(root)
-    newWindow.title(selectedFile)
+    newWindow.title("simulate log file")
     newWindow.geometry("400x400")
 
     canvas = tk.Canvas(newWindow, width= 400, height= 100)
@@ -89,7 +89,7 @@ def showSelectedFile(path, selectedFile):
 def runSelectedFile(selectedPath, selectedFile):    
     path = selectedPath
     file = os.path.join(path, selectedFile)
-    simulateLogFile(file)
+    runSimulation(file)
 
 
 root = tk.Tk()
