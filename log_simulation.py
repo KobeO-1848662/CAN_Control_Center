@@ -1,7 +1,7 @@
 import serial
 import time
 
-ECU0 = serial.Serial(port='/dev/ttyACM0', baudrate=9600, timeout=0.01)      
+ECU0 = serial.Serial(port='COM3', baudrate=9600, timeout=0.01)      
 
 ecuMessageMappingROAD = {
     0: [1031, 117, 1512, 458, 569, 61, 722, 1788, 651, 737, 930, 1262, 631, 1661, 1694, 1505],
@@ -28,7 +28,7 @@ def sendMessageToECU(message, id):
     data = ECU0.readline()                          
     return data
 
-def findECUs(logfile):
+def runSimulation(logfile):
     with open(logfile, 'r') as file:
         for line in file:
             if '#' in line:   
@@ -40,16 +40,7 @@ def findECUs(logfile):
 
                 for ecuID, messages in ecuMessageMappingROAD.items():
                     if decimalID in messages:
-                        yield withoutTimestamp, ecuID
+                        value = sendMessageToECU(withoutTimestamp, ecuID)
+                        print(value)
                         break
-
-def runSimulation(logfile):
-    list = findECUs(logfile)
-    time.sleep(1)
-    for i in list:
-        message = i[0]
-        ecu = i[1]
-        value = sendMessageToECU(message, ecu)
-        print(value)
-    
-    print("simulatie voltooid")
+        print("simulatie voltooid")
