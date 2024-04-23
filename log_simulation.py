@@ -1,7 +1,7 @@
 import serial
 import time
 
-ECU0 = serial.Serial(port='COM3', baudrate=9600, timeout=0.01)      
+ECU0 = serial.Serial(port='COM6', baudrate=115200, timeout=0.01)      
 
 ecuMessageMappingROAD = {
     0: [1031, 117, 1512, 458, 569, 61, 722, 1788, 651, 737, 930, 1262, 631, 1661, 1694, 1505],
@@ -14,19 +14,12 @@ ecuMessageMappingROAD = {
     7: [485, 813, 420, 470, 37, 1649, 695, 244, 300, 1413, 1533]
 }
 
-
 def sendMessageToECU(message, id):
-    currentTimestamp = time.time()                  #timestamp op moment van writen naar ECU
-    message = f"({currentTimestamp}) + {message}"           
-
     #if id == 0:
-    ECU0.write(bytes(message, 'utf-8'))         #write timestamp + ecuID naar arduino (=juiste ECU)
-                                                    #zelfde doen voor overige ECUs
+    ECU0.write(bytes(message, 'utf-8'))
+    data = ECU0.read()
+    return print(data)
     
-    # dit wordt later verwijderd 
-    # (ECUs moeten niet terugschrijven maar moeten op CAN bus schrijven)
-    data = ECU0.readline()                          
-    return data
 
 def runSimulation(logfile):
     with open(logfile, 'r') as file:
@@ -34,13 +27,13 @@ def runSimulation(logfile):
             if '#' in line:   
                 message = line.split()
                 data = message[2]
-                messageID = data.split('#')[0]
+                mess = data.split('#')
+                newMessage = f"{mess[0]} {mess[1]}"
+                messageID = mess[0]
                 decimalID = int(messageID, 16)
-                withoutTimestamp = message[1] + " " + message[2]
 
                 for ecuID, messages in ecuMessageMappingROAD.items():
                     if decimalID in messages:
-                        value = sendMessageToECU(withoutTimestamp, ecuID)
-                        print(value)
+                        sendMessageToECU(newMessage, ecuID)
                         break
         print("simulatie voltooid")

@@ -2,6 +2,7 @@ import os
 import tkinter as tk
 from tkinter import messagebox
 from log_simulation import runSimulation
+import time
 
 #directory to log files
 currentDirectory = os.path.dirname(__file__)
