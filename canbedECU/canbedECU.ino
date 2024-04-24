@@ -13,14 +13,6 @@ void setup()
     
   uint8_t ret;
   ret = can.begin(MCP_ANY, CAN_500KBPS, MCAN_MODE_CAN);
-  if (ret == CAN_OK) 
-  {
-    Serial.println("CAN Initialized Successfully!");
-  } else 
-  {
-    Serial.println("Error Initializing CAN...");
-    while(1);
-  }
 }
 
 void loop()
