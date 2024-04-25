@@ -40,20 +40,18 @@ void setup() {
     Serial.begin(115200);
     while(!Serial);
     CAN.begin(CAN_500KBPS);
-    
 }
 
 void loop() {
   // put your main code here, to run repeatedly: 
   while(!Serial.available());
-  Serial.readBytes(receivedChars, 20);
+  Serial.readBytes(receivedChars, sizeof(receivedChars));
 
   byte a = digit_to_binary(receivedChars[0]);
   byte b = digit_to_binary(receivedChars[1]);
   byte c = digit_to_binary(receivedChars[2]);
 
   int id = a * 256 + b * 16 + c;
-
   int z = 0;
   for (int i = 4; i < 21; i+=2){
     byte A = digit_to_binary(receivedChars[i]);

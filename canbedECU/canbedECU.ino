@@ -19,7 +19,7 @@ void loop()
 {
   // put your main code here, to run repeatedly: 
   while(!Serial.available());
-  Serial.readBytes(receivedChars, 20);
+  Serial.readBytes(receivedChars, sizeof(receivedChars));
 
   byte a = digit_to_binary(receivedChars[0]);
   byte b = digit_to_binary(receivedChars[1]);

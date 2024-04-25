@@ -2,7 +2,7 @@ import serial
 import tkinter as tk
 from tkinter import messagebox
 import serial.tools.list_ports
-
+import time
 
 ecuMessageMappingROAD = {
     0: [1031, 117, 1512, 458, 569, 61, 722, 1788, 651, 737, 930, 1262, 631, 1661, 1694, 1505],
@@ -23,34 +23,30 @@ ecuMessageMappingCanTrain1 = {
 }
 
 def sendMessageToECU(message, id, ecuList):
-    if id == 0:
-        ECU0 = serial.Serial(port=ecuList[0], baudrate=115200, timeout=0.01) 
-        ECU0.write(bytes(message, 'utf-8'))
-        #data = ECU0.read()
-        #return print(data)
-    '''
-    elif id == 1:
-        ECU1 = serial.Serial(port=ecuList[1], baudrate=115200, timeout=0.01) 
-        ECU1.write(bytes(message, 'utf-8'))
-        data = ECU1.read()
-        return print(data)
-    
-    elif id == 2:
-        ECU2 = serial.Serial(port=ecuList[2], baudrate=115200, timeout=0.01) 
-        ECU2.write(bytes(message, 'utf-8'))
-        data = ECU2.read()
-        return print(data)
-    
-    zelfde nog doen voor overige ECUs
-    '''
-    
+    for i in range(len(ecuList)):
+        if id == i:
+            ecuList[i].write(bytes(message, 'utf-8'))
+            data = ecuList[i].read()
+            print(data)
 
-def runSimulation(logfile, dataset, ecuList):
+def assignEcus(portlist):
+    ecuList = []
+    for elem in portlist:
+        ecu = serial.Serial(port=elem, baudrate=115200, timeout=0.01)
+        ecuList.append(ecu)
+    return ecuList
+
+
+def runSimulation(logfile, dataset, portList):
+    ecuList = assignEcus(portList)
     with open(logfile, 'r') as file:
+        time.sleep(2)                                   #without sleep arduino ecus wont work
         for line in file:
             if '#' in line:   
                 message = line.split()
                 data = message[2]
+                if len(data) < 20:
+                    data = data.ljust(20, '0')
                 mess = data.split('#')
                 newMessage = f"{mess[0]} {mess[1]}"
                 messageID = mess[0]
@@ -73,11 +69,11 @@ def runSimulation(logfile, dataset, ecuList):
                     #        break        
         print("simulatie voltooid")
 
-def checkValid(logfile, dataset, ecuList):
-    if len(ecuList) != len(set(ecuList)):
+def checkValid(logfile, dataset, portList):
+    if len(portList) != len(set(portList)):
         messagebox.showwarning("Error", "Two ECUs are connected to the same port")
     else:
-        runSimulation(logfile, dataset, ecuList)
+        runSimulation(logfile, dataset, portList)
 
 
 def chooseECUs(logfile, dataset):
@@ -86,51 +82,51 @@ def chooseECUs(logfile, dataset):
     ecuWindow.geometry("400x400")
 
     ports = serial.tools.list_ports.comports()
-    availableECUs = [port.name for port in ports]
+    availablePorts = [port.name for port in ports]
     
     canvas = tk.Canvas(ecuWindow, width=400, height=100)
     canvas.create_text(200, 25, text="Choose your ECUs", font="bold", justify="center")
     canvas.pack()
     
     if dataset == "ROAD":
-        #if len(availableECUs) < 8:
-        #    messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 8")
-        #    ecuWindow.destroy()
-        #else:
+        if len(availablePorts) < 8:
+            messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 8")
+            ecuWindow.destroy()
+        else:
             canvas2 = tk.Canvas(ecuWindow, width=400, height=200)
             canvas2.pack()
 
-            ecuVars = [tk.StringVar(canvas2, value=availableECUs[0]) for _ in range(8)]
+            ecuVars = [tk.StringVar(canvas2, value=availablePorts[0]) for _ in range(8)]
             dropdowns = []
 
             for i in range(8):
                 canvas2.create_text(150, 40 + i*20, text=f"ecu {i+1}: ", justify="center")
-                dropdown = tk.OptionMenu(canvas2, ecuVars[i], *availableECUs)
+                dropdown = tk.OptionMenu(canvas2, ecuVars[i], *availablePorts)
                 dropdown.pack()
                 dropdowns.append(dropdown)
                 canvas2.create_window(220, 40 + i*20, window=dropdowns[i])
  
-            confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, ecuList=[ecuVars[0].get()]))
+            confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, portList=[var.get() for var in ecuVars]))
             confirmButton.pack(pady=10)
 
     
     elif dataset == "CAN TRAIN AND TEST":
-        if len(availableECUs) < 4:
+        if len(availablePorts) < 4:
             messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 4")
             ecuWindow.destroy()
         else:
             canvas2 = tk.Canvas(ecuWindow, width=400, height=200)
             canvas2.pack()
 
-            ecuVars = [tk.StringVar(canvas2, value=availableECUs[0]) for _ in range(4)]
+            ecuVars = [tk.StringVar(canvas2, value=availablePorts[0]) for _ in range(4)]
             dropdowns = []
 
             for i in range(4):
                 canvas2.create_text(150, 40 + i*20, text=f"ecu {i+1}: ", justify="center")
-                dropdown = tk.OptionMenu(canvas2, ecuVars[i], *availableECUs)
+                dropdown = tk.OptionMenu(canvas2, ecuVars[i], *availablePorts)
                 dropdown.pack()
                 dropdowns.append(dropdown)
                 canvas2.create_window(220, 40 + i*20, window=dropdowns[i])
 
-            confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, ecuList=[var.get() for var in ecuVars]))
+            confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, portList=[var.get() for var in ecuVars]))
             confirmButton.pack(pady=10)
