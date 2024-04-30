@@ -61,7 +61,7 @@ void loop() {
     buf[z++] = ds;
 
   }
-  CAN.MCP_CAN::sendMsgBuf(id, 0, 8, buf);
+  CAN.sendMsgBuf(id, 0, 8, buf);
 }
 
 byte digit_to_binary(char a){

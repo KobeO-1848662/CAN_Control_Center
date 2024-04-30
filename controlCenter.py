@@ -25,7 +25,7 @@ def onButtonClick():
         if selectedOption == "CAN TRAIN AND TEST" or selectedOption == "ROAD":
             openSubOptionsWindow(selectedOption)
         else:
-            openLogWindow(selectedOption)
+            openLogWindow(selectedOption, selectedOption, subDataset=None)
 
 
 def openSubOptionsWindow(selectedOption):
@@ -37,6 +37,7 @@ def openSubOptionsWindow(selectedOption):
         subOptions = ["HIGHWAY", "DYNO"]
     else:    
         subOptions = ["auto1", "auto2", "auto3"]
+    
 
     canvas = tk.Canvas(subOptionsWindow, width=400, height=100)
     canvas.create_text(200, 25, text="Choose a sub folder", font="bold", justify="center")
@@ -48,11 +49,11 @@ def openSubOptionsWindow(selectedOption):
     subOptionDropdown = tk.OptionMenu(subOptionsWindow, subOptionVar, *subOptions)
     subOptionDropdown.pack(pady=10)
 
-    confirmButton = tk.Button(subOptionsWindow, text="Choose sub folder", command=lambda: openLogWindow(subOptionVar.get(), selectedOption))
+    confirmButton = tk.Button(subOptionsWindow, text="Choose sub folder", command=lambda: openLogWindow(subOptionVar.get(), selectedOption, subOptionVar.get()))
     confirmButton.pack(pady=5)
 
 
-def openLogWindow(selectedOption, dataset="{selectedOption}"):
+def openLogWindow(selectedOption, dataset, subDataset):
     newWindow = tk.Toplevel(root)
     newWindow.title("Log file selection")
     newWindow.geometry("400x400")
@@ -75,11 +76,11 @@ def openLogWindow(selectedOption, dataset="{selectedOption}"):
     fileDropdown = tk.OptionMenu(newWindow, fileVar, *logFiles)
     fileDropdown.pack(pady=10)
 
-    showFileButton = tk.Button(newWindow, text="Choose log file", command=lambda: showSelectedFile(path, fileVar.get(), dataset))
+    showFileButton = tk.Button(newWindow, text="Choose log file", command=lambda: showSelectedFile(path, fileVar.get(), dataset, subDataset))
     showFileButton.pack(pady=5)
 
 
-def showSelectedFile(path, selectedFile, dataset):
+def showSelectedFile(path, selectedFile, dataset, subDataset):
     newWindow = tk.Toplevel(root)
     newWindow.title("Simulate log file")
     newWindow.geometry("400x400")
@@ -88,14 +89,14 @@ def showSelectedFile(path, selectedFile, dataset):
     canvas.create_text(200, 50, text="Chosen file: \n" + selectedFile, fill="black", justify="center")
     canvas.pack()
 
-    runFileButton = tk.Button(newWindow, text="Start simulation", command=lambda: runSelectedFile(path, selectedFile, dataset))
+    runFileButton = tk.Button(newWindow, text="Start simulation", command=lambda: runSelectedFile(path, selectedFile, dataset, subDataset))
     runFileButton.pack(pady=5)
 
 
-def runSelectedFile(selectedPath, selectedFile, dataset):    
+def runSelectedFile(selectedPath, selectedFile, dataset, subDataset):
     path = selectedPath
     file = os.path.join(path, selectedFile)
-    chooseECUs(file, dataset)
+    chooseECUs(file, dataset, subDataset)
         
 
 
