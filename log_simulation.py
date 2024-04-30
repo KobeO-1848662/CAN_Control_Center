@@ -3,6 +3,9 @@ import tkinter as tk
 from tkinter import messagebox
 import serial.tools.list_ports
 import time
+import numpy as np
+from matplotlib import pyplot as plt
+import statistics
 
 ecuMessageMappingROAD = {
     0: [1031, 117, 1512, 458, 569, 61, 722, 1788, 651, 737, 930, 1262, 631, 1661, 1694, 1505],
@@ -26,8 +29,8 @@ def sendMessageToECU(message, id, ecuList):
     for i in range(len(ecuList)):
         if id == i:
             ecuList[i].write(bytes(message, 'utf-8'))
-            data = ecuList[i].read()
-            print(data)
+            #data = ecuList[i].read()
+            #print(data)
 
 def assignEcus(portlist):
     ecuList = []
@@ -36,11 +39,37 @@ def assignEcus(portlist):
         ecuList.append(ecu)
     return ecuList
 
+def runForLoop(val):
+    for i in range(0,int(val)):
+        for j in range(1):
+            for k in range(1):
+                for l in range(1):
+                    pass
+
+def calibrateForLoop(valList):
+    median = 0
+    for i in valList:
+        medianPrev = median
+        timeTaken = []
+
+        for j in range(50):
+            start = time.time()
+            runForLoop(i)
+            end = time.time()
+            timeTaken.append((end-start))
+
+        median = np.median(timeTaken)
+        print(f"{i} {median}")
+        if medianPrev < 0.00001 and median > 0.00001:
+            print(i)
+
+            
 
 def runSimulation(logfile, dataset, portList):
     ecuList = assignEcus(portList)
     with open(logfile, 'r') as file:
-        time.sleep(2)                                   #without sleep arduino ecus wont work
+        val = [10,100,1000,10000,100000]
+        calibrateForLoop(val)                                   #calibration of for loop
         for line in file:
             if '#' in line:   
                 message = line.split()
@@ -89,10 +118,10 @@ def chooseECUs(logfile, dataset):
     canvas.pack()
     
     if dataset == "ROAD":
-        if len(availablePorts) < 8:
-            messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 8")
-            ecuWindow.destroy()
-        else:
+        #if len(availablePorts) < 8:
+         #   messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 8")
+          #  ecuWindow.destroy()
+        #else:
             canvas2 = tk.Canvas(ecuWindow, width=400, height=200)
             canvas2.pack()
 
@@ -106,7 +135,7 @@ def chooseECUs(logfile, dataset):
                 dropdowns.append(dropdown)
                 canvas2.create_window(220, 40 + i*20, window=dropdowns[i])
  
-            confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, portList=[var.get() for var in ecuVars]))
+            confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, portList=[ecuVars[0].get()]))
             confirmButton.pack(pady=10)
 
     
