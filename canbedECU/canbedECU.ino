@@ -2,9 +2,7 @@
 
 SAME51_CAN can;
 
-const byte numChars = 20;
-char receivedChars[numChars];
-unsigned char buf[8];
+char length[1];
 
 void setup()
 {
@@ -19,6 +17,11 @@ void loop()
 {
   // put your main code here, to run repeatedly: 
   while(!Serial.available());
+  Serial.readBytes(length, sizeof(length));
+  int len = digit_to_binary(length[0]);
+
+  char receivedChars[3+2*len];
+  unsigned char buf[len]; 
   Serial.readBytes(receivedChars, sizeof(receivedChars));
 
   byte a = digit_to_binary(receivedChars[0]);
@@ -28,7 +31,8 @@ void loop()
   int id = a * 256 + b * 16 + c;
 
   int z = 0;
-  for (int i = 4; i < 21; i+=2){
+  int last = 3+(2*len)+1;
+  for (int i = 3; i < last; i+=2){
     byte A = digit_to_binary(receivedChars[i]);
     byte B = digit_to_binary(receivedChars[i+1]);
     byte ds = A * 16 + B;
@@ -36,7 +40,7 @@ void loop()
     buf[z++] = ds;
   }
 
-  can.sendMsgBuf(id, 0, 8, buf);
+  can.sendMsgBuf(id, 0, len, buf);
 }
 
 byte digit_to_binary(char a){

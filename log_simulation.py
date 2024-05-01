@@ -45,6 +45,12 @@ ecuMessageMappingCanTrain3 = {
     7: [460, 463, 197, 201, 1249, 1300, 1323, 481, 499]
 }
 
+ecuMessageMappingGids = {
+    0: [1087, 880, 2, 160, 304, 320, 339], 
+    1: [1201, 497, 399, 161, 305, 1088, 608], 
+    2: [1440, 1442, 790, 809, 688, 1349, 1264], 
+    3: [1520, 1680, 672, 1072, 704, 848]
+}
 def sendMessageToECU(message, id, ecuList):
     for i in range(len(ecuList)):
         if id == i:
@@ -117,12 +123,11 @@ def runSimulation(logfile, dataset, subDataset, portList):
                 if timeStampPrev == 0:
                     dtime =  0 
                 else:
-                    dtime = (int(timeStamp) - int(timeStampPrev))
+                    dtime = (int(timeStamp) - int(timeStampPrev))/10
                 data = message[2]
-                if len(data) < 20:
-                    data = data.ljust(20, '0')
                 mess = data.split('#')
-                newMessage = f"{mess[0]} {mess[1]}"
+                messLen = int(len(mess[1])/2)
+                newMessage = f"{messLen}{mess[0]}{mess[1]}"
                 messageID = mess[0]
                 decimalID = int(messageID, 16)
 
@@ -132,7 +137,7 @@ def runSimulation(logfile, dataset, subDataset, portList):
                             runForLoop(int(dtime*value))
                             sendMessageToECU(newMessage, ecuID, ecuList)
                             break
-                if dataset == "CAN TRAIN AND TEST":
+                elif dataset == "CAN TRAIN AND TEST":
                     if subDataset == "auto1":
                         for ecuID, messages in ecuMessageMappingCanTrain1.items():
                             if decimalID in messages:
@@ -151,11 +156,12 @@ def runSimulation(logfile, dataset, subDataset, portList):
                                 runForLoop(int(dtime*value))
                                 sendMessageToECU(newMessage, ecuID, ecuList)
                                 break
-                #if dataset == "GIDS":
-                 #   for ecuID, messages in ecuMessageMappingROAD.items():
-                  #      if decimalID in messages:
-                   #         sendMessageToECU(newMessage, ecuID, ecuList)
-                    #        break        
+                else:
+                    for ecuID, messages in ecuMessageMappingGids.items():
+                        if decimalID in messages:
+                            runForLoop(int(dtime*value))
+                            sendMessageToECU(newMessage, ecuID, ecuList)
+                            break        
         print("simulatie voltooid")
 
 def checkValid(logfile, dataset, subDataset, portList):
@@ -262,3 +268,24 @@ def chooseECUs(logfile, dataset, subDataset):
 
                 confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, portList=[f"/dev/{var.get()}" for var in ecuVars]))
                 confirmButton.pack(pady=10)
+    else:
+        #if len(availablePorts) < 4:
+         #   messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 4")
+          #  ecuWindow.destroy()
+        #else:
+            canvas2 = tk.Canvas(ecuWindow, width=400, height=300)
+            canvas2.pack()
+
+            ecuVars = [tk.StringVar(canvas2, value=availablePorts[0]) for _ in range(4)]
+            dropdowns = []
+
+            for i in range(4):
+                canvas2.create_text(150, 40 + i*25, text=f"ecu {i+1}: ", justify="center")
+                dropdown = tk.OptionMenu(canvas2, ecuVars[i], *availablePorts)
+                dropdown.pack()
+                dropdowns.append(dropdown)
+                canvas2.create_window(220, 40 + i*25, window=dropdowns[i])
+ 
+            confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, portList=[f"/dev/{ecuVars[0].get()}"]))
+            confirmButton.pack(pady=10)
+

@@ -32,9 +32,7 @@ mcp2518fd CAN(SPI_CS_PIN); // Set CS pin
 mcp2515_can CAN(SPI_CS_PIN); // Set CS pin
 #endif
 
-const byte numChars = 20;
-char receivedChars[numChars];
-unsigned char buf[8];
+char length[1];
 
 void setup() {
     Serial.begin(115200);
@@ -45,6 +43,11 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly: 
   while(!Serial.available());
+  Serial.readBytes(length, sizeof(length));
+  int len = digit_to_binary(length[0]);
+
+  char receivedChars[3+2*len];
+  unsigned char buf[len];
   Serial.readBytes(receivedChars, sizeof(receivedChars));
 
   byte a = digit_to_binary(receivedChars[0]);
@@ -52,8 +55,10 @@ void loop() {
   byte c = digit_to_binary(receivedChars[2]);
 
   int id = a * 256 + b * 16 + c;
+
   int z = 0;
-  for (int i = 4; i < 21; i+=2){
+  int last = 3+(2*len)+1;
+  for (int i = 3; i < last; i+=2){
     byte A = digit_to_binary(receivedChars[i]);
     byte B = digit_to_binary(receivedChars[i+1]);
     byte ds = A * 16 + B;
@@ -61,7 +66,7 @@ void loop() {
     buf[z++] = ds;
 
   }
-  CAN.sendMsgBuf(id, 0, 8, buf);
+  CAN.MCP_CAN::sendMsgBuf(id, 0, len, buf);
 }
 
 byte digit_to_binary(char a){
