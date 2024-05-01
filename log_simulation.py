@@ -46,9 +46,9 @@ ecuMessageMappingCanTrain3 = {
 }
 
 ecuMessageMappingGids = {
-    0: [1087, 880, 2, 160, 304, 320, 339], 
+    0: [1087, 880, 2, 160, 304, 320, 688,339], 
     1: [1201, 497, 399, 161, 305, 1088, 608], 
-    2: [1440, 1442, 790, 809, 688, 1349, 1264], 
+    2: [1440, 1442, 790, 809,  1349, 1264], 
     3: [1520, 1680, 672, 1072, 704, 848]
 }
 def sendMessageToECU(message, id, ecuList):
@@ -138,13 +138,13 @@ def runSimulation(logfile, dataset, subDataset, portList):
                             sendMessageToECU(newMessage, ecuID, ecuList)
                             break
                 elif dataset == "CAN TRAIN AND TEST":
-                    if subDataset == "auto1":
+                    if subDataset == "CAR 1":
                         for ecuID, messages in ecuMessageMappingCanTrain1.items():
                             if decimalID in messages:
                                 runForLoop(int(dtime*value))
                                 sendMessageToECU(newMessage, ecuID, ecuList)
                                 break
-                    elif subDataset == "auto2":
+                    elif subDataset == "CAR 2":
                         for ecuID, messages in ecuMessageMappingCanTrain2.items():
                             if decimalID in messages:
                                 runForLoop(int(dtime*value))
@@ -184,10 +184,10 @@ def chooseECUs(logfile, dataset, subDataset):
     canvas.pack()
     
     if dataset == "ROAD":
-        #if len(availablePorts) < 8:
-         #   messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 8")
-          #  ecuWindow.destroy()
-        #else:
+        if len(availablePorts) < 8:
+            messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 8")
+            ecuWindow.destroy()
+        else:
             canvas2 = tk.Canvas(ecuWindow, width=400, height=300)
             canvas2.pack()
 
@@ -201,16 +201,16 @@ def chooseECUs(logfile, dataset, subDataset):
                 dropdowns.append(dropdown)
                 canvas2.create_window(220, 40 + i*25, window=dropdowns[i])
  
-            confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, portList=[f"/dev/{ecuVars[0].get()}"]))
+            confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, portList=[f"/dev/{var.get()}" for var in ecuVars]))
             confirmButton.pack(pady=10)
 
     
     elif dataset == "CAN TRAIN AND TEST":
-        if subDataset == "auto1":
-            #if len(availablePorts) < 4:
-             #   messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 4")
-              #  ecuWindow.destroy()
-            #else:
+        if subDataset == "CAR 1":
+            if len(availablePorts) < 4:
+                messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 4")
+                ecuWindow.destroy()
+            else:
                 canvas2 = tk.Canvas(ecuWindow, width=400, height=300)
                 canvas2.pack()
 
@@ -224,10 +224,10 @@ def chooseECUs(logfile, dataset, subDataset):
                     dropdowns.append(dropdown)
                     canvas2.create_window(220, 40 + i*25, window=dropdowns[i])
 
-                confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, portList=[f"/dev/{ecuVars[0].get()}"]))
+                confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, portList=[f"/dev/{var.get()}" for var in ecuVars]))
                 confirmButton.pack(pady=10)
         
-        elif subDataset == "auto2":
+        elif subDataset == "CAR 2":
             if len(availablePorts) < 6:
                 messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 6")
                 ecuWindow.destroy()
@@ -269,10 +269,10 @@ def chooseECUs(logfile, dataset, subDataset):
                 confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, portList=[f"/dev/{var.get()}" for var in ecuVars]))
                 confirmButton.pack(pady=10)
     else:
-        #if len(availablePorts) < 4:
-         #   messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 4")
-          #  ecuWindow.destroy()
-        #else:
+        if len(availablePorts) < 4:
+            messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 4")
+            ecuWindow.destroy()
+        else:
             canvas2 = tk.Canvas(ecuWindow, width=400, height=300)
             canvas2.pack()
 
@@ -286,6 +286,6 @@ def chooseECUs(logfile, dataset, subDataset):
                 dropdowns.append(dropdown)
                 canvas2.create_window(220, 40 + i*25, window=dropdowns[i])
  
-            confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, portList=[f"/dev/{ecuVars[0].get()}"]))
+            confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, portList=[f"/dev/{var.get()}" for var in ecuVars]))
             confirmButton.pack(pady=10)
 

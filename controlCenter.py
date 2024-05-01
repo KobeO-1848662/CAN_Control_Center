@@ -3,7 +3,6 @@ import tkinter as tk
 from tkinter import messagebox
 from log_simulation import chooseECUs
 
-# directory to log files
 currentDirectory = os.path.dirname(__file__)
 canTrainPath = os.path.join(currentDirectory, "datasets/canTrain")
 roadPath = os.path.join(currentDirectory, "datasets/road/ambient/")
@@ -11,9 +10,9 @@ paths = {
     "ROAD": roadPath,
     "GIDS": os.path.join(currentDirectory, "datasets/gids"),
     "CAN TRAIN AND TEST": canTrainPath,
-    "auto1": os.path.join(canTrainPath, "2011-chevrolet-impala"),
-    "auto2": os.path.join(canTrainPath, "2011-chevrolet-traverse"),
-    "auto3": os.path.join(canTrainPath, "2016-chevrolet-silverado"),
+    "CAR 1": os.path.join(canTrainPath, "2011-chevrolet-impala"),
+    "CAR 2": os.path.join(canTrainPath, "2011-chevrolet-traverse"),
+    "CAR 3": os.path.join(canTrainPath, "2016-chevrolet-silverado"),
     "HIGHWAY": os.path.join(roadPath, "highway"),
     "DYNO": os.path.join(roadPath, "dyno")
     }
@@ -36,7 +35,7 @@ def openSubOptionsWindow(selectedOption):
     if selectedOption == "ROAD":
         subOptions = ["HIGHWAY", "DYNO"]
     else:    
-        subOptions = ["auto1", "auto2", "auto3"]
+        subOptions = ["CAR 1", "CAR 2", "CAR 3"]
     
 
     canvas = tk.Canvas(subOptionsWindow, width=400, height=100)
@@ -116,7 +115,7 @@ canvas.pack()
 dropdown = tk.OptionMenu(root, dropdownVar, *datasets)
 dropdown.pack(pady=10)
 
-button = tk.Button(root, text="kies dataset", command=onButtonClick)
+button = tk.Button(root, text="Choose dataset", command=onButtonClick)
 button.pack(pady=10)
 
 root.mainloop()
