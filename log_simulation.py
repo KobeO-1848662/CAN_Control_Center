@@ -4,8 +4,6 @@ from tkinter import messagebox
 import serial.tools.list_ports
 import time
 import numpy as np
-from matplotlib import pyplot as plt
-import statistics
 
 ecuMessageMappingROAD = {
     0: [1031, 117, 1512, 458, 569, 61, 722, 1788, 651, 737, 930, 1262, 631, 1661, 1694, 1505],
@@ -51,9 +49,9 @@ ecuMessageMappingGids = {
     2: [1440, 1442, 790, 809,  1349, 1264], 
     3: [1520, 1680, 672, 1072, 704, 848]
 }
-def sendMessageToECU(message, id, ecuList):
+def sendMessageToECU(message, ecu, ecuList):
     for i in range(len(ecuList)):
-        if id == i:
+        if ecu == i:
             ecuList[i].write(bytes(message, 'utf-8'))
             data = ecuList[i].read()
             print(data)
@@ -113,7 +111,6 @@ def runSimulation(logfile, dataset, subDataset, portList):
         val = [10,100,1000,10000,100000]
         threshold = 1.0           
         value = calibrateForLoop(val, threshold)
-        print(value)
         timeStamp = 0
         for line in file:
             if '#' in line:   
@@ -162,7 +159,7 @@ def runSimulation(logfile, dataset, subDataset, portList):
                             runForLoop(int(dtime*value))
                             sendMessageToECU(newMessage, ecuID, ecuList)
                             break        
-        print("simulatie voltooid")
+        print("Simulation completed")
 
 def checkValid(logfile, dataset, subDataset, portList):
     if len(portList) != len(set(portList)):
@@ -173,14 +170,16 @@ def checkValid(logfile, dataset, subDataset, portList):
 
 def chooseECUs(logfile, dataset, subDataset):
     ecuWindow = tk.Tk()
-    ecuWindow.title("choose ECUs")
+    ecuWindow.title("Choose ECUs")
     ecuWindow.geometry("400x400")
 
     ports = serial.tools.list_ports.comports()
     availablePorts = [port.name for port in ports]
     
-    canvas = tk.Canvas(ecuWindow, width=400, height=50)
-    canvas.create_text(200, 25, text="Choose your ECUs", font="bold", justify="center")
+    canvas = tk.Canvas(ecuWindow, width=400, height=100)
+    canvas.create_text(200, 25, text="CAN control center", font ="bold", justify="center")
+    canvas.create_text(200, 75, text="Assign your ECUs", justify="center")
+
     canvas.pack()
     
     if dataset == "ROAD":
@@ -188,7 +187,7 @@ def chooseECUs(logfile, dataset, subDataset):
             messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 8")
             ecuWindow.destroy()
         else:
-            canvas2 = tk.Canvas(ecuWindow, width=400, height=300)
+            canvas2 = tk.Canvas(ecuWindow, width=400, height=250)
             canvas2.pack()
 
             ecuVars = [tk.StringVar(canvas2, value=availablePorts[0]) for _ in range(8)]
@@ -211,7 +210,7 @@ def chooseECUs(logfile, dataset, subDataset):
                 messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 4")
                 ecuWindow.destroy()
             else:
-                canvas2 = tk.Canvas(ecuWindow, width=400, height=300)
+                canvas2 = tk.Canvas(ecuWindow, width=400, height=250)
                 canvas2.pack()
 
                 ecuVars = [tk.StringVar(canvas2, value=availablePorts[0]) for _ in range(4)]
@@ -232,7 +231,7 @@ def chooseECUs(logfile, dataset, subDataset):
                 messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 6")
                 ecuWindow.destroy()
             else:
-                canvas2 = tk.Canvas(ecuWindow, width=400, height=300)
+                canvas2 = tk.Canvas(ecuWindow, width=400, height=250)
                 canvas2.pack()
 
                 ecuVars = [tk.StringVar(canvas2, value=availablePorts[0]) for _ in range(6)]
@@ -253,7 +252,7 @@ def chooseECUs(logfile, dataset, subDataset):
                 messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 8")
                 ecuWindow.destroy()
             else:
-                canvas2 = tk.Canvas(ecuWindow, width=400, height=300)
+                canvas2 = tk.Canvas(ecuWindow, width=400, height=250)
                 canvas2.pack()
 
                 ecuVars = [tk.StringVar(canvas2, value=availablePorts[0]) for _ in range(8)]
@@ -273,7 +272,7 @@ def chooseECUs(logfile, dataset, subDataset):
             messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 4")
             ecuWindow.destroy()
         else:
-            canvas2 = tk.Canvas(ecuWindow, width=400, height=300)
+            canvas2 = tk.Canvas(ecuWindow, width=400, height=250)
             canvas2.pack()
 
             ecuVars = [tk.StringVar(canvas2, value=availablePorts[0]) for _ in range(4)]

@@ -39,9 +39,10 @@ def openSubOptionsWindow(selectedOption):
     
 
     canvas = tk.Canvas(subOptionsWindow, width=400, height=100)
-    canvas.create_text(200, 25, text="Choose a sub folder", font="bold", justify="center")
+    canvas.create_text(200, 25, text="CAN control center", fill="black", font="bold", justify="center")
+    canvas.create_text(200, 75, text="Choose a sub folder", justify="center")
     canvas.pack()
-
+    
     subOptionVar = tk.StringVar(subOptionsWindow)
     subOptionVar.set(subOptions[0])
 
@@ -66,7 +67,8 @@ def openLogWindow(selectedOption, dataset, subDataset):
         return
 
     canvas = tk.Canvas(newWindow, width=400, height=100)
-    canvas.create_text(200, 25, text="Choose a log file", font="bold", justify="center")
+    canvas.create_text(200, 25, text="CAN control center", fill="black", font="bold", justify="center")
+    canvas.create_text(200, 75, text="Choose a log file", justify="center")
     canvas.pack()
 
     fileVar = tk.StringVar(newWindow)
@@ -85,7 +87,8 @@ def showSelectedFile(path, selectedFile, dataset, subDataset):
     newWindow.geometry("400x400")
 
     canvas = tk.Canvas(newWindow, width= 400, height= 100)
-    canvas.create_text(200, 50, text="Chosen file: \n" + selectedFile, fill="black", justify="center")
+    canvas.create_text(200, 25, text="CAN control center", fill="black", font="bold", justify="center")
+    canvas.create_text(200, 75, text="Chosen file: \n" + selectedFile, justify="center")
     canvas.pack()
 
     runFileButton = tk.Button(newWindow, text="Start simulation", command=lambda: runSelectedFile(path, selectedFile, dataset, subDataset))
@@ -110,6 +113,7 @@ dropdownVar.set(datasets[0])
 
 canvas = tk.Canvas(root, width=400, height=100)
 canvas.create_text(200, 25, text="CAN control center", fill="black", font="bold", justify="center")
+canvas.create_text(200, 75, text="Choose a dataset to simulate", justify="center")
 canvas.pack()
 
 dropdown = tk.OptionMenu(root, dropdownVar, *datasets)
