@@ -52,9 +52,11 @@ ecuMessageMappingGids = {
 def sendMessageToECU(message, ecu, ecuList):
     for i in range(len(ecuList)):
         if ecu == i:
-            ecuList[i].write(bytes(message, 'utf-8'))
-            data = ecuList[i].read()
+            hexMessage = bytes.fromhex(message)
+            ecuList[i].write(hexMessage)
+            data = ecuList[i].read(3)
             print(data)
+            time.sleep(1)
         
 
 def assignEcus(portlist):
@@ -124,7 +126,7 @@ def runSimulation(logfile, dataset, subDataset, portList):
                 data = message[2]
                 mess = data.split('#')
                 messLen = int(len(mess[1])/2)
-                newMessage = f"{messLen}{mess[0]}{mess[1]}"
+                newMessage = f"0{messLen}0{mess[0]}{mess[1]}"
                 messageID = mess[0]
                 decimalID = int(messageID, 16)
 
@@ -183,10 +185,10 @@ def chooseECUs(logfile, dataset, subDataset):
     canvas.pack()
     
     if dataset == "ROAD":
-        if len(availablePorts) < 8:
-            messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 8")
-            ecuWindow.destroy()
-        else:
+     #   if len(availablePorts) < 8:
+      #      messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 8")
+       #     ecuWindow.destroy()
+        #else:
             canvas2 = tk.Canvas(ecuWindow, width=400, height=250)
             canvas2.pack()
 
@@ -200,7 +202,7 @@ def chooseECUs(logfile, dataset, subDataset):
                 dropdowns.append(dropdown)
                 canvas2.create_window(220, 40 + i*25, window=dropdowns[i])
  
-            confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, portList=[f"/dev/{var.get()}" for var in ecuVars]))
+            confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, portList=[f"/dev/{ecuVars[0].get()}"]))
             confirmButton.pack(pady=10)
 
     

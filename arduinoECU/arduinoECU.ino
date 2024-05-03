@@ -33,6 +33,7 @@ mcp2515_can CAN(SPI_CS_PIN); // Set CS pin
 #endif
 
 char length[1];
+char receivedId[2];
 
 void setup() {
     Serial.begin(115200);
@@ -44,39 +45,23 @@ void loop() {
   // put your main code here, to run repeatedly: 
   while(!Serial.available());
   Serial.readBytes(length, sizeof(length));
-  int len = digit_to_binary(length[0]);
+  byte len = length[0];
 
-  char receivedChars[3+2*len];
+  Serial.readBytes(receivedId, sizeof(receivedId));
+  byte id1 = receivedId[0];
+  byte id2 = receivedId[1];
+  int id = (id1 << 8) | (id2);
+
+  char receivedChars[2*len];
   unsigned char buf[len];
   Serial.readBytes(receivedChars, sizeof(receivedChars));
-
-  byte a = digit_to_binary(receivedChars[0]);
-  byte b = digit_to_binary(receivedChars[1]);
-  byte c = digit_to_binary(receivedChars[2]);
-
-  int id = a * 256 + b * 16 + c;
-
   int z = 0;
-  int last = 3+(2*len)+1;
-  for (int i = 3; i < last; i+=2){
-    byte A = digit_to_binary(receivedChars[i]);
-    byte B = digit_to_binary(receivedChars[i+1]);
-    byte ds = A * 16 + B;
+  int last = (2*len)+1;
+  for (int i = 0; i < last; i+=1){
+    byte ds = receivedChars[i];
 
     buf[z++] = ds;
-
   }
-  CAN.MCP_CAN::sendMsgBuf(id, 0, len, buf);
-}
-
-byte digit_to_binary(char a){
-  if ( 'A' <= a && a <= 'F') {
-    return a - 'A' + 10;
-  } else if ( 'a' <= a && a <= 'f') {
-    return a - 'a' + 10;
-  } else if ( '0' <= a && a <= '9') {
-    return a - '0';
-  } else {
-    return a=0;
-  } 
+  
+  CAN.sendMsgBuf(id, 0, len, buf);
 }
