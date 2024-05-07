@@ -187,10 +187,10 @@ def chooseECUs(logfile, dataset, subDataset, attack):
     
     if dataset == "ROAD":
         if attack == True:
-            #if len(availablePorts) < 9:
-             #   messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 9")
-              #  ecuWindow.destroy()
-            #else:
+            if len(availablePorts) < 9:
+                messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 9")
+                ecuWindow.destroy()
+            else:
                 canvas2 = tk.Canvas(ecuWindow, width=400, height=250)
                 canvas2.pack()
 
@@ -203,13 +203,13 @@ def chooseECUs(logfile, dataset, subDataset, attack):
                     dropdowns.append(dropdown)
                     canvas2.create_window(220, 40 + i*25, window=dropdowns[i])
     
-                confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, attack, portList=[f"/dev/{ecuVars[0].get()}"]))
+                confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, attack, portList=[f"/dev/{var.get()}" for var in ecuVars]))
                 confirmButton.pack(pady=10)
         else:
-            #if len(availablePorts) < 8:
-             #   messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 8")
-              #  ecuWindow.destroy()
-            #else:
+            if len(availablePorts) < 8:
+                messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 8")
+                ecuWindow.destroy()
+            else:
                 canvas2 = tk.Canvas(ecuWindow, width=400, height=250)
                 canvas2.pack()
 
@@ -222,7 +222,7 @@ def chooseECUs(logfile, dataset, subDataset, attack):
                     dropdowns.append(dropdown)
                     canvas2.create_window(220, 40 + i*25, window=dropdowns[i])
     
-                confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, portList=[f"/dev/{ecuVars[0].get()}"]))
+                confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, portList=[f"/dev/{var.get()}" for var in ecuVars]))
                 confirmButton.pack(pady=10)
 
     
