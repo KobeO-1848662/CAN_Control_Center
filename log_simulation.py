@@ -49,20 +49,21 @@ ecuMessageMappingGids = {
     2: [1440, 1442, 790, 809,  1349, 1264], 
     3: [1520, 1680, 672, 1072, 704, 848]
 }
-def sendMessageToECU(message, ecu, ecuList):
+
+def sendMessageToECU(message, ecu, ecuList, attack):
     for i in range(len(ecuList)):
+        hexMessage = bytes.fromhex(message)
         if ecu == i:
-            hexMessage = bytes.fromhex(message)
             ecuList[i].write(hexMessage)
-            data = ecuList[i].read(3)
-            print(data)
-            time.sleep(1)
-        
+            print(hexMessage)
+        else:
+            if attack == True:
+                ecuList[len(ecuList)-1].write(hexMessage)
 
 def assignEcus(portlist):
     ecuList = []
     for elem in portlist:
-        ecu = serial.Serial(port=elem, baudrate=115200, timeout=0.01)
+        ecu = serial.Serial(port=elem, baudrate=115200)
         ecuList.append(ecu)
     return ecuList
 
@@ -107,7 +108,7 @@ def calibrateForLoop(valList, threshold):
             return calibrationError()
             
 
-def runSimulation(logfile, dataset, subDataset, portList):
+def runSimulation(logfile, dataset, subDataset, attack, portList):
     ecuList = assignEcus(portList)
     with open(logfile, 'r') as file:
         val = [10,100,1000,10000,100000]
@@ -134,43 +135,43 @@ def runSimulation(logfile, dataset, subDataset, portList):
                     for ecuID, messages in ecuMessageMappingROAD.items():
                         if decimalID in messages:
                             runForLoop(int(dtime*value))
-                            sendMessageToECU(newMessage, ecuID, ecuList)
+                            sendMessageToECU(newMessage, ecuID, ecuList, attack)
                             break
                 elif dataset == "CAN TRAIN AND TEST":
                     if subDataset == "CAR 1":
                         for ecuID, messages in ecuMessageMappingCanTrain1.items():
                             if decimalID in messages:
                                 runForLoop(int(dtime*value))
-                                sendMessageToECU(newMessage, ecuID, ecuList)
+                                sendMessageToECU(newMessage, ecuID, ecuList, attack)
                                 break
                     elif subDataset == "CAR 2":
                         for ecuID, messages in ecuMessageMappingCanTrain2.items():
                             if decimalID in messages:
                                 runForLoop(int(dtime*value))
-                                sendMessageToECU(newMessage, ecuID, ecuList)
+                                sendMessageToECU(newMessage, ecuID, ecuList, attack)
                                 break
                     else:
                         for ecuID, messages in ecuMessageMappingCanTrain3.items():
                             if decimalID in messages:
                                 runForLoop(int(dtime*value))
-                                sendMessageToECU(newMessage, ecuID, ecuList)
+                                sendMessageToECU(newMessage, ecuID, ecuList, attack)
                                 break
                 else:
                     for ecuID, messages in ecuMessageMappingGids.items():
                         if decimalID in messages:
                             runForLoop(int(dtime*value))
-                            sendMessageToECU(newMessage, ecuID, ecuList)
+                            sendMessageToECU(newMessage, ecuID, ecuList, attack)
                             break        
         print("Simulation completed")
 
-def checkValid(logfile, dataset, subDataset, portList):
+def checkValid(logfile, dataset, subDataset, attack, portList):
     if len(portList) != len(set(portList)):
         messagebox.showwarning("Error", "Two ECUs are connected to the same port")
     else:
-        runSimulation(logfile, dataset, subDataset, portList)
+        runSimulation(logfile, dataset, subDataset, attack, portList)
 
 
-def chooseECUs(logfile, dataset, subDataset):
+def chooseECUs(logfile, dataset, subDataset, attack):
     ecuWindow = tk.Tk()
     ecuWindow.title("Choose ECUs")
     ecuWindow.geometry("400x400")
@@ -185,29 +186,194 @@ def chooseECUs(logfile, dataset, subDataset):
     canvas.pack()
     
     if dataset == "ROAD":
-     #   if len(availablePorts) < 8:
-      #      messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 8")
-       #     ecuWindow.destroy()
-        #else:
-            canvas2 = tk.Canvas(ecuWindow, width=400, height=250)
-            canvas2.pack()
+        if attack == True:
+            #if len(availablePorts) < 9:
+             #   messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 9")
+              #  ecuWindow.destroy()
+            #else:
+                canvas2 = tk.Canvas(ecuWindow, width=400, height=250)
+                canvas2.pack()
 
-            ecuVars = [tk.StringVar(canvas2, value=availablePorts[0]) for _ in range(8)]
-            dropdowns = []
+                ecuVars = [tk.StringVar(canvas2, value=availablePorts[0]) for _ in range(9)]
+                dropdowns = []    
+                for i in range(9):
+                    canvas2.create_text(150, 40 + i*25, text=f"ecu {i+1}: ", justify="center")
+                    dropdown = tk.OptionMenu(canvas2, ecuVars[i], *availablePorts)
+                    dropdown.pack()
+                    dropdowns.append(dropdown)
+                    canvas2.create_window(220, 40 + i*25, window=dropdowns[i])
+    
+                confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, attack, portList=[f"/dev/{ecuVars[0].get()}"]))
+                confirmButton.pack(pady=10)
+        else:
+            #if len(availablePorts) < 8:
+             #   messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 8")
+              #  ecuWindow.destroy()
+            #else:
+                canvas2 = tk.Canvas(ecuWindow, width=400, height=250)
+                canvas2.pack()
 
-            for i in range(8):
-                canvas2.create_text(150, 40 + i*25, text=f"ecu {i+1}: ", justify="center")
-                dropdown = tk.OptionMenu(canvas2, ecuVars[i], *availablePorts)
-                dropdown.pack()
-                dropdowns.append(dropdown)
-                canvas2.create_window(220, 40 + i*25, window=dropdowns[i])
- 
-            confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, portList=[f"/dev/{ecuVars[0].get()}"]))
-            confirmButton.pack(pady=10)
+                ecuVars = [tk.StringVar(canvas2, value=availablePorts[0]) for _ in range(8)]
+                dropdowns = []    
+                for i in range(8):
+                    canvas2.create_text(150, 40 + i*25, text=f"ecu {i+1}: ", justify="center")
+                    dropdown = tk.OptionMenu(canvas2, ecuVars[i], *availablePorts)
+                    dropdown.pack()
+                    dropdowns.append(dropdown)
+                    canvas2.create_window(220, 40 + i*25, window=dropdowns[i])
+    
+                confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, portList=[f"/dev/{ecuVars[0].get()}"]))
+                confirmButton.pack(pady=10)
 
     
     elif dataset == "CAN TRAIN AND TEST":
         if subDataset == "CAR 1":
+            if attack == True:
+                if len(availablePorts) < 5:
+                    messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 5")
+                    ecuWindow.destroy()
+                else:
+                    canvas2 = tk.Canvas(ecuWindow, width=400, height=250)
+                    canvas2.pack()
+
+                    ecuVars = [tk.StringVar(canvas2, value=availablePorts[0]) for _ in range(5)]
+                    dropdowns = []
+
+                    for i in range(5):
+                        canvas2.create_text(150, 40 + i*25, text=f"ecu {i+1}: ", justify="center")
+                        dropdown = tk.OptionMenu(canvas2, ecuVars[i], *availablePorts)
+                        dropdown.pack()
+                        dropdowns.append(dropdown)
+                        canvas2.create_window(220, 40 + i*25, window=dropdowns[i])
+
+                    confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, attack, portList=[f"/dev/{var.get()}" for var in ecuVars]))
+                    confirmButton.pack(pady=10)
+            else:
+                if len(availablePorts) < 4:
+                    messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 4")
+                    ecuWindow.destroy()
+                else:
+                    canvas2 = tk.Canvas(ecuWindow, width=400, height=250)
+                    canvas2.pack()
+
+                    ecuVars = [tk.StringVar(canvas2, value=availablePorts[0]) for _ in range(4)]
+                    dropdowns = []
+
+                    for i in range(4):
+                        canvas2.create_text(150, 40 + i*25, text=f"ecu {i+1}: ", justify="center")
+                        dropdown = tk.OptionMenu(canvas2, ecuVars[i], *availablePorts)
+                        dropdown.pack()
+                        dropdowns.append(dropdown)
+                        canvas2.create_window(220, 40 + i*25, window=dropdowns[i])
+
+                    confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, attack, portList=[f"/dev/{var.get()}" for var in ecuVars]))
+                    confirmButton.pack(pady=10)
+        
+        elif subDataset == "CAR 2":
+            if attack == True:
+                if len(availablePorts) < 7:
+                    messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 7")
+                    ecuWindow.destroy()
+                else:
+                    canvas2 = tk.Canvas(ecuWindow, width=400, height=250)
+                    canvas2.pack()
+
+                    ecuVars = [tk.StringVar(canvas2, value=availablePorts[0]) for _ in range(7)]
+                    dropdowns = []
+
+                    for i in range(7):
+                        canvas2.create_text(150, 40 + i*25, text=f"ecu {i+1}: ", justify="center")
+                        dropdown = tk.OptionMenu(canvas2, ecuVars[i], *availablePorts)
+                        dropdown.pack()
+                        dropdowns.append(dropdown)
+                        canvas2.create_window(220, 40 + i*25, window=dropdowns[i])
+
+                    confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, attack, portList=[f"/dev/{var.get()}" for var in ecuVars]))
+                    confirmButton.pack(pady=10)
+            else:
+                if len(availablePorts) < 6:
+                    messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 6")
+                    ecuWindow.destroy()
+                else:
+                    canvas2 = tk.Canvas(ecuWindow, width=400, height=250)
+                    canvas2.pack()
+
+                    ecuVars = [tk.StringVar(canvas2, value=availablePorts[0]) for _ in range(6)]
+                    dropdowns = []
+
+                    for i in range(6):
+                        canvas2.create_text(150, 40 + i*25, text=f"ecu {i+1}: ", justify="center")
+                        dropdown = tk.OptionMenu(canvas2, ecuVars[i], *availablePorts)
+                        dropdown.pack()
+                        dropdowns.append(dropdown)
+                        canvas2.create_window(220, 40 + i*25, window=dropdowns[i])
+
+                    confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, attack, portList=[f"/dev/{var.get()}" for var in ecuVars]))
+                    confirmButton.pack(pady=10)
+        
+        elif subDataset == "CAR 3":
+            if attack == True:
+                if len(availablePorts) < 9:
+                    messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 9")
+                    ecuWindow.destroy()
+                else:
+                    canvas2 = tk.Canvas(ecuWindow, width=400, height=250)
+                    canvas2.pack()
+
+                    ecuVars = [tk.StringVar(canvas2, value=availablePorts[0]) for _ in range(9)]
+                    dropdowns = []
+
+                    for i in range(9):
+                        canvas2.create_text(150, 40 + i*25, text=f"ecu {i+1}: ", justify="center")
+                        dropdown = tk.OptionMenu(canvas2, ecuVars[i], *availablePorts)
+                        dropdown.pack()
+                        dropdowns.append(dropdown)
+                        canvas2.create_window(220, 40 + i*25, window=dropdowns[i])
+
+                    confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, attack, portList=[f"/dev/{var.get()}" for var in ecuVars]))
+                    confirmButton.pack(pady=10)
+            else:
+                if len(availablePorts) < 8:
+                    messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 8")
+                    ecuWindow.destroy()
+                else:
+                    canvas2 = tk.Canvas(ecuWindow, width=400, height=250)
+                    canvas2.pack()
+
+                    ecuVars = [tk.StringVar(canvas2, value=availablePorts[0]) for _ in range(8)]
+                    dropdowns = []
+
+                    for i in range(8):
+                        canvas2.create_text(150, 40 + i*25, text=f"ecu {i+1}: ", justify="center")
+                        dropdown = tk.OptionMenu(canvas2, ecuVars[i], *availablePorts)
+                        dropdown.pack()
+                        dropdowns.append(dropdown)
+                        canvas2.create_window(220, 40 + i*25, window=dropdowns[i])
+
+                    confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, attack, portList=[f"/dev/{var.get()}" for var in ecuVars]))
+                    confirmButton.pack(pady=10)
+    else:
+        if attack == True:
+            if len(availablePorts) < 5:
+                messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 5")
+                ecuWindow.destroy()
+            else:
+                canvas2 = tk.Canvas(ecuWindow, width=400, height=250)
+                canvas2.pack()
+
+                ecuVars = [tk.StringVar(canvas2, value=availablePorts[0]) for _ in range(5)]
+                dropdowns = []
+
+                for i in range(5):
+                    canvas2.create_text(150, 40 + i*25, text=f"ecu {i+1}: ", justify="center")
+                    dropdown = tk.OptionMenu(canvas2, ecuVars[i], *availablePorts)
+                    dropdown.pack()
+                    dropdowns.append(dropdown)
+                    canvas2.create_window(220, 40 + i*25, window=dropdowns[i])
+    
+                confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, attack, portList=[f"/dev/{var.get()}" for var in ecuVars]))
+                confirmButton.pack(pady=10)
+        else:
             if len(availablePorts) < 4:
                 messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 4")
                 ecuWindow.destroy()
@@ -224,69 +390,7 @@ def chooseECUs(logfile, dataset, subDataset):
                     dropdown.pack()
                     dropdowns.append(dropdown)
                     canvas2.create_window(220, 40 + i*25, window=dropdowns[i])
-
-                confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, portList=[f"/dev/{var.get()}" for var in ecuVars]))
+    
+                confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, attack, portList=[f"/dev/{var.get()}" for var in ecuVars]))
                 confirmButton.pack(pady=10)
-        
-        elif subDataset == "CAR 2":
-            if len(availablePorts) < 6:
-                messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 6")
-                ecuWindow.destroy()
-            else:
-                canvas2 = tk.Canvas(ecuWindow, width=400, height=250)
-                canvas2.pack()
-
-                ecuVars = [tk.StringVar(canvas2, value=availablePorts[0]) for _ in range(6)]
-                dropdowns = []
-
-                for i in range(6):
-                    canvas2.create_text(150, 40 + i*25, text=f"ecu {i+1}: ", justify="center")
-                    dropdown = tk.OptionMenu(canvas2, ecuVars[i], *availablePorts)
-                    dropdown.pack()
-                    dropdowns.append(dropdown)
-                    canvas2.create_window(220, 40 + i*25, window=dropdowns[i])
-
-                confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, portList=[f"/dev/{var.get()}" for var in ecuVars]))
-                confirmButton.pack(pady=10)
-        
-        else:
-            if len(availablePorts) < 8:
-                messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 8")
-                ecuWindow.destroy()
-            else:
-                canvas2 = tk.Canvas(ecuWindow, width=400, height=250)
-                canvas2.pack()
-
-                ecuVars = [tk.StringVar(canvas2, value=availablePorts[0]) for _ in range(8)]
-                dropdowns = []
-
-                for i in range(8):
-                    canvas2.create_text(150, 40 + i*25, text=f"ecu {i+1}: ", justify="center")
-                    dropdown = tk.OptionMenu(canvas2, ecuVars[i], *availablePorts)
-                    dropdown.pack()
-                    dropdowns.append(dropdown)
-                    canvas2.create_window(220, 40 + i*25, window=dropdowns[i])
-
-                confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, portList=[f"/dev/{var.get()}" for var in ecuVars]))
-                confirmButton.pack(pady=10)
-    else:
-        if len(availablePorts) < 4:
-            messagebox.showwarning("Not enough ECUs", "There are not enough ECUs connected to run this file. The minimum amount that should be connected is 4")
-            ecuWindow.destroy()
-        else:
-            canvas2 = tk.Canvas(ecuWindow, width=400, height=250)
-            canvas2.pack()
-
-            ecuVars = [tk.StringVar(canvas2, value=availablePorts[0]) for _ in range(4)]
-            dropdowns = []
-
-            for i in range(4):
-                canvas2.create_text(150, 40 + i*25, text=f"ecu {i+1}: ", justify="center")
-                dropdown = tk.OptionMenu(canvas2, ecuVars[i], *availablePorts)
-                dropdown.pack()
-                dropdowns.append(dropdown)
-                canvas2.create_window(220, 40 + i*25, window=dropdowns[i])
- 
-            confirmButton = tk.Button(ecuWindow, text= "run simulation", command=lambda: checkValid(logfile, dataset, subDataset, portList=[f"/dev/{var.get()}" for var in ecuVars]))
-            confirmButton.pack(pady=10)
 

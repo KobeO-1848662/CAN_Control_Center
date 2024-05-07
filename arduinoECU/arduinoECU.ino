@@ -52,11 +52,11 @@ void loop() {
   byte id2 = receivedId[1];
   int id = (id1 << 8) | (id2);
 
-  char receivedChars[2*len];
+  char receivedChars[len];
   unsigned char buf[len];
   Serial.readBytes(receivedChars, sizeof(receivedChars));
   int z = 0;
-  int last = (2*len)+1;
+  int last = len+1;
   for (int i = 0; i < last; i+=1){
     byte ds = receivedChars[i];
 
